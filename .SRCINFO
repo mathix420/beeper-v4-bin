@@ -1,10 +1,12 @@
 pkgbase = beeper-v4-bin
 	pkgdesc = The ultimate messaging app
 	pkgver = 4.0.478
-	pkgrel = 4
+	pkgrel = 5
 	url = https://beeper.com/
 	arch = x86_64
 	license = LicenseRef-beeper
+	depends = libappindicator-gtk3
+	depends = libsecret
 	provides = beeper
 	conflicts = beeper
 	conflicts = beeper-latest-bin
@@ -14,4 +16,6 @@ pkgbase = beeper-v4-bin
 	sha256sums = SKIP
 
 pkgname = beeper-v4-bin
+	depends = libappindicator-gtk3
+	depends = libsecret
 	depends = hicolor-icon-theme

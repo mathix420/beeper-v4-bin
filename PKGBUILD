@@ -11,8 +11,9 @@
 _pkgname='beeper'
 pkgname="$_pkgname${_pkgtype:-}"
 pkgver=4.0.478
-pkgrel=4
+pkgrel=5
 pkgdesc="The ultimate messaging app"
+depends=(libappindicator-gtk3 libsecret)
 url="https://beeper.com/"
 license=('LicenseRef-beeper')
 arch=('x86_64')
@@ -40,9 +41,6 @@ build() {
   sed -Ei \
     's@^(if \[ -z \"\$APPDIR\" ] ; then)$@APPDIR="/'"$_install_path"'/beeper"\n\1@' \
     "$srcdir/squashfs-root/AppRun"
-
-  # remove default .desktop file
-  rm -f "$srcdir/squashfs-root/*.desktop"
 }
 
 _package_beeper() {
@@ -52,6 +50,9 @@ _package_beeper() {
   # everything else
   install -dm755 "$pkgdir/$_install_path"
   mv "$srcdir/squashfs-root" "$pkgdir/$_install_path/beeper"
+
+  # remove default .desktop file
+  rm -f "$pkgdir/$_install_path/beeper/beepertexts.desktop"
 }
 
 package() {
