@@ -3,19 +3,16 @@
 ## options
 : ${_autoupdate:=true}
 
-: ${_system_electron:=true}
-: ${_electron_version:=}
 : ${_install_path:=opt}
 
-[ -n "${_electron_version}" ] && _system_electron=true
 : ${_pkgtype=-v4-bin}
 
 # basic info
 _pkgname='beeper'
 pkgname="$_pkgname${_pkgtype:-}"
 pkgver=4.0.478
-pkgrel=2
-pkgdesc="A unified messaging app"
+pkgrel=3
+pkgdesc="The ultimate messaging app"
 url="https://beeper.com/"
 license=('LicenseRef-beeper')
 arch=('x86_64')
@@ -54,39 +51,6 @@ _package_beeper() {
   mv "$srcdir/squashfs-root" "$pkgdir/$_install_path/beeper"
 }
 
-_package_asar() {
-  # script
-  install -Dm755 /dev/stdin "$pkgdir/usr/bin/$_pkgname" << END
-#!/usr/bin/env bash
-
-name=$_pkgname
-flags_file="\${XDG_CONFIG_HOME:-\$HOME/.config}/\${name}-flags.conf"
-
-lines=()
-if [[ -f "\${flags_file}" ]]; then
-  mapfile -t lines < "\${flags_file}"
-fi
-
-flags=()
-for line in "\${lines[@]}"; do
-  if [[ ! "\${line}" =~ ^[[:space:]]*#.* ]] && [[ -n "\${line}" ]]; then
-    flags+=("\${line}")
-  fi
-done
-
-: \${ELECTRON_IS_DEV:=0}
-export ELECTRON_IS_DEV
-: \${ELECTRON_FORCE_IS_PACKAGED:=true}
-export ELECTRON_FORCE_IS_PACKAGED
-
-exec electron "/${_install_path}/\${name}/resources/app.asar" "\${flags[@]}" "\$@"
-END
-
-  # app.asar
-  install -dm755 "$pkgdir/$_install_path/$_pkgname"/resources
-  mv "$srcdir"/squashfs-root/resources/* "$pkgdir/$_install_path/$_pkgname"/resources/
-}
-
 package() {
   depends+=('hicolor-icon-theme')
 
@@ -97,17 +61,19 @@ Type=Application
 Name=${_pkgname^}
 GenericName=Unified Messenger
 Comment=$pkgdesc
-Exec=$_pkgname %U
-Icon=$_pkgname
+Exec=$_pkgname --no-sandbox %U
+Icon=beepertexts
 Terminal=false
 StartupWMClass=Beeper
-Categories=Utility;
+X-AppImage-Version=$pkgver
+MimeType=x-scheme-handler/beeper;
+Categories=Network;InstantMessaging;
 END
 
   # icons
-  for s in 16 32 48 64 128 256 512 1024; do
+  for s in 0; do
     install -Dm644 \
-      "$srcdir/squashfs-root/usr/share/icons/hicolor/${s}x${s}/apps/beeper.png" \
+      "$srcdir/squashfs-root/usr/share/icons/hicolor/${s}x${s}/apps/beepertexts.png" \
       -t "$pkgdir/usr/share/icons/hicolor/${s}x${s}/apps"
   done
 
@@ -115,12 +81,7 @@ END
   install -Dm644 "$srcdir/squashfs-root/LICENSE.electron.txt" -t "$pkgdir/usr/share/licenses/$pkgname/"
   install -Dm644 "$srcdir/squashfs-root/LICENSES.chromium.html" -t "$pkgdir/usr/share/licenses/$pkgname/"
 
-  if [[ "${_system_electron::1}" == "t" ]]; then
-    depends+=("electron${_electron_version:-}")
-    _package_asar
-  else
-    _package_beeper
-  fi
+  _package_beeper
 
   # fix permissions
   chmod -R u+rwX,go+rX,go-w "$pkgdir"
