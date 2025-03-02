@@ -14,7 +14,7 @@
 _pkgname='beeper'
 pkgname="$_pkgname${_pkgtype:-}"
 pkgver=4.0.478
-pkgrel=1
+pkgrel=2
 pkgdesc="A unified messaging app"
 url="https://beeper.com/"
 license=('LicenseRef-beeper')
@@ -24,7 +24,7 @@ options=('!strip' '!debug')
 
 _source_main() {
   provides=("$_pkgname")
-  conflicts=("$_pkgname")
+  conflicts=("$_pkgname" beeper-latest-bin)
 
   source=("$_filename"::"$_dl_url")
   sha256sums=('SKIP')

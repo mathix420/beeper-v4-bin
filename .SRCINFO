@@ -1,12 +1,13 @@
 pkgbase = beeper-v4-bin
 	pkgdesc = A unified messaging app
 	pkgver = 4.0.478
-	pkgrel = 1
+	pkgrel = 2
 	url = https://beeper.com/
 	arch = x86_64
 	license = LicenseRef-beeper
 	provides = beeper
 	conflicts = beeper
+	conflicts = beeper-latest-bin
 	options = !strip
 	options = !debug
 	source = Beeper-4.0.478.AppImage::https://api.beeper.com/desktop/download/linux/x64/stable/com.automattic.beeper.desktop
