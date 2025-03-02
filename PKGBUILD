@@ -11,7 +11,7 @@
 _pkgname='beeper'
 pkgname="$_pkgname${_pkgtype:-}"
 pkgver=4.0.478
-pkgrel=3
+pkgrel=4
 pkgdesc="The ultimate messaging app"
 url="https://beeper.com/"
 license=('LicenseRef-beeper')
@@ -40,6 +40,9 @@ build() {
   sed -Ei \
     's@^(if \[ -z \"\$APPDIR\" ] ; then)$@APPDIR="/'"$_install_path"'/beeper"\n\1@' \
     "$srcdir/squashfs-root/AppRun"
+
+  # remove default .desktop file
+  rm -f "$srcdir/squashfs-root/*.desktop"
 }
 
 _package_beeper() {
