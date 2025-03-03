@@ -11,7 +11,7 @@
 _pkgname='beeper'
 pkgname="$_pkgname${_pkgtype:-}"
 pkgver=4.0.478
-pkgrel=6
+pkgrel=7
 pkgdesc="The ultimate messaging app"
 depends=(libappindicator-gtk3 libsecret)
 url="https://beeper.com/"
@@ -74,9 +74,14 @@ Icon=beepertexts
 Terminal=false
 StartupWMClass=Beeper
 X-AppImage-Version=$pkgver
-MimeType=x-scheme-handler/beeper;
+MimeType=x-scheme-handler/beeper;x-scheme-handler/matrix;x-scheme-handler/element;
 Categories=Network;InstantMessaging;
 END
+
+  # default mime
+  xdg-mime default beeper.desktop x-scheme-handler/beeper
+  xdg-mime default beeper.desktop x-scheme-handler/matrix
+  xdg-mime default beeper.desktop x-scheme-handler/element
 
   # icons
   for s in 0; do
