@@ -10,8 +10,8 @@
 # basic info
 _pkgname='beeper'
 pkgname="$_pkgname${_pkgtype:-}"
-pkgver=4.0.478
-pkgrel=7
+pkgver=4.0.494
+pkgrel=1
 pkgdesc="The ultimate messaging app"
 depends=(libappindicator-gtk3 libsecret)
 url="https://beeper.com/"
@@ -56,7 +56,7 @@ _package_beeper() {
 
   # replace registerLinuxConfig function
   # Find the Linux config file and replace the export statement
-  sed -i 's/export{[a-zA-Z0-9_]* as registerLinuxConfig};/const noopFunc=function(){};export{noopFunc as registerLinuxConfig};/' "$pkgdir/$_install_path/beeper/resources/app/build/main/linux-_"*.mjs
+  sed -i 's/export{[a-zA-Z0-9_]* as registerLinuxConfig};/const noopFunc=function(){};export{noopFunc as registerLinuxConfig};/' "$pkgdir/$_install_path/beeper/resources/app/build/main/linux-"*.mjs
 }
 
 package() {
