@@ -10,11 +10,11 @@
 # basic info
 _pkgname='beeper'
 pkgname="$_pkgname${_pkgtype:-}"
-pkgver=4.0.494
+pkgver=4.0.522
 pkgrel=1
 pkgdesc="The ultimate messaging app"
-depends=(libappindicator-gtk3 libsecret)
-url="https://beeper.com/"
+depends=(libappindicator-gtk3 libsecret hicolor-icon-theme)
+url="https://www.beeper.com/beta"
 license=('LicenseRef-beeper')
 arch=('x86_64')
 
@@ -83,12 +83,10 @@ END
   xdg-mime default beeper.desktop x-scheme-handler/matrix
   xdg-mime default beeper.desktop x-scheme-handler/element
 
-  # icons
-  for s in 0; do
-    install -Dm644 \
-      "$srcdir/squashfs-root/usr/share/icons/hicolor/${s}x${s}/apps/beepertexts.png" \
-      -t "$pkgdir/usr/share/icons/hicolor/${s}x${s}/apps"
-  done
+  # icon
+  install -Dm644 \
+    "$srcdir/squashfs-root/usr/share/icons/hicolor/0x0/apps/beepertexts.png" \
+    -t "$pkgdir/usr/share/icons/hicolor/512x512/apps"
 
   # license files
   install -Dm644 "$srcdir/squashfs-root/LICENSE.electron.txt" -t "$pkgdir/usr/share/licenses/$pkgname/"
