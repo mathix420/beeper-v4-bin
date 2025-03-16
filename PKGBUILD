@@ -11,9 +11,9 @@
 _pkgname='beeper'
 pkgname="$_pkgname${_pkgtype:-}"
 pkgver=4.0.522
-pkgrel=1
+pkgrel=2
 pkgdesc="The ultimate messaging app"
-depends=(libappindicator-gtk3 libsecret hicolor-icon-theme)
+depends=(libappindicator-gtk3 libnotify libsecret hicolor-icon-theme)
 url="https://www.beeper.com/beta"
 license=('LicenseRef-beeper')
 arch=('x86_64')

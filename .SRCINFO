@@ -1,11 +1,12 @@
 pkgbase = beeper-v4-bin
 	pkgdesc = The ultimate messaging app
 	pkgver = 4.0.522
-	pkgrel = 1
+	pkgrel = 2
 	url = https://www.beeper.com/beta
 	arch = x86_64
 	license = LicenseRef-beeper
 	depends = libappindicator-gtk3
+	depends = libnotify
 	depends = libsecret
 	depends = hicolor-icon-theme
 	provides = beeper
@@ -18,6 +19,7 @@ pkgbase = beeper-v4-bin
 
 pkgname = beeper-v4-bin
 	depends = libappindicator-gtk3
+	depends = libnotify
 	depends = libsecret
 	depends = hicolor-icon-theme
 	depends = hicolor-icon-theme
