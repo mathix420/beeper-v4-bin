@@ -10,8 +10,8 @@
 # basic info
 _pkgname='beeper'
 pkgname="$_pkgname${_pkgtype:-}"
-pkgver=4.0.522
-pkgrel=2
+pkgver=4.0.551
+pkgrel=1
 pkgdesc="The ultimate messaging app"
 depends=(libappindicator-gtk3 libnotify libsecret hicolor-icon-theme)
 url="https://www.beeper.com/beta"
@@ -85,7 +85,7 @@ END
 
   # icon
   install -Dm644 \
-    "$srcdir/squashfs-root/usr/share/icons/hicolor/0x0/apps/beepertexts.png" \
+    "$srcdir/squashfs-root/usr/share/icons/hicolor/512x512/apps/beepertexts.png" \
     -t "$pkgdir/usr/share/icons/hicolor/512x512/apps"
 
   # license files
