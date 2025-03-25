@@ -10,8 +10,8 @@
 # basic info
 _pkgname='beeper'
 pkgname="$_pkgname${_pkgtype:-}"
-pkgver=4.0.551
-pkgrel=2
+pkgver=4.0.565
+pkgrel=1
 pkgdesc="The ultimate messaging app"
 depends=(libappindicator-gtk3 libnotify libsecret hicolor-icon-theme xdg-utils)
 url="https://www.beeper.com/beta"
