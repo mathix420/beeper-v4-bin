@@ -11,9 +11,9 @@
 _pkgname='beeper'
 pkgname="$_pkgname${_pkgtype:-}"
 pkgver=4.0.570
-pkgrel=1
+pkgrel=2
 pkgdesc="The ultimate messaging app"
-depends=(libappindicator-gtk3 libnotify libsecret hicolor-icon-theme xdg-utils)
+depends=(libappindicator-gtk3 libnotify libsecret hicolor-icon-theme)
 url="https://www.beeper.com/beta"
 license=('LicenseRef-beeper')
 arch=('x86_64')
@@ -77,9 +77,6 @@ X-AppImage-Version=$pkgver
 MimeType=x-scheme-handler/beeper;x-scheme-handler/matrix;x-scheme-handler/element;
 Categories=Network;InstantMessaging;
 END
-
-  # default mime
-  xdg-mime default beeper.desktop x-scheme-handler/beeper
 
   # icon
   install -Dm644 \
