@@ -11,7 +11,7 @@
 _pkgname='beeper'
 pkgname="$_pkgname${_pkgtype:-}"
 pkgver=4.2.892
-pkgrel=1
+pkgrel=2
 pkgdesc="The ultimate messaging app"
 depends=(libappindicator-gtk3 libnotify libsecret hicolor-icon-theme)
 makedepends=(asar)
@@ -95,6 +95,14 @@ _package_beeper() {
 package() {
   depends+=('hicolor-icon-theme')
 
+  # Window class the app actually uses at runtime, so launchers and Wayland
+  # compositors (e.g. sway) can map the window to this entry and its icon.
+  # Upstream declares it in its bundled .desktop (currently "Beeper"); read it
+  # from there so we stay correct if it changes, falling back to "Beeper".
+  local _wmclass
+  _wmclass=$(sed -nE 's/^StartupWMClass=(.+)$/\1/p' "$srcdir/squashfs-root/beepertexts.desktop" | head -n1)
+  : "${_wmclass:=Beeper}"
+
   # desktop file
   install -Dm644 /dev/stdin "$pkgdir/usr/share/applications/beeper.desktop" << END
 [Desktop Entry]
@@ -105,7 +113,7 @@ Comment=$pkgdesc
 Exec=$_pkgname --no-sandbox %U
 Icon=beepertexts
 Terminal=false
-StartupWMClass=BeeperTexts
+StartupWMClass=$_wmclass
 X-AppImage-Version=$pkgver
 MimeType=x-scheme-handler/beeper;x-scheme-handler/matrix;x-scheme-handler/element;
 Categories=Network;InstantMessaging;

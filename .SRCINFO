@@ -1,7 +1,7 @@
 pkgbase = beeper-v4-bin
 	pkgdesc = The ultimate messaging app
 	pkgver = 4.2.892
-	pkgrel = 1
+	pkgrel = 2
 	url = https://www.beeper.com/beta
 	arch = x86_64
 	license = LicenseRef-beeper
