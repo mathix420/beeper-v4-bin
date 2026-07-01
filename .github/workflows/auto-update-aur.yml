@@ -1,0 +1,149 @@
+name: Auto-update AUR package
+
+# Detects new upstream Beeper releases and, when one is found, bumps the
+# PKGBUILD, regenerates .SRCINFO and publishes the new version to the AUR.
+#
+# Required repository secret:
+#   AUR_SSH_PRIVATE_KEY  - private SSH key whose public half is registered on
+#                          your AUR account (https://aur.archlinux.org account
+#                          settings -> SSH Public Key).
+
+on:
+  schedule:
+    # Every 6 hours. Adjust to taste.
+    - cron: "0 */6 * * *"
+  workflow_dispatch: # allow manual runs from the Actions tab
+
+# Allow the bump commit to be pushed back to this GitHub repo.
+permissions:
+  contents: write
+
+# Never run two updates at once (avoids racing AUR pushes).
+concurrency:
+  group: auto-update-aur
+  cancel-in-progress: false
+
+env:
+  PKGNAME: beeper-v4-bin
+  COMMIT_NAME: Arnaud Gissinger
+  COMMIT_EMAIL: agissing@student.42.fr
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Detect latest Beeper version
+        id: detect
+        run: |
+          set -euo pipefail
+          dl_url="https://api.beeper.com/desktop/download/linux/x64/stable/com.automattic.beeper.desktop"
+
+          # Follow the redirect with a 2-byte ranged request so we learn the
+          # final CDN filename (Beeper-X.Y.Z-x86_64.AppImage) without downloading
+          # the whole AppImage.
+          eff=$(curl -fsSL --max-time 60 -r 0-1 -o /dev/null -w '%{url_effective}' "$dl_url")
+          fname=$(basename "${eff%%\?*}")
+          latest=$(printf '%s' "$fname" | sed -E 's/^Beeper-([0-9]+\.[0-9]+\.[0-9]+).*/\1/')
+          current=$(sed -nE 's/^pkgver=([0-9.]+).*/\1/p' PKGBUILD)
+
+          echo "Upstream filename: $fname"
+          echo "Upstream version : $latest"
+          echo "Packaged version : $current"
+
+          if ! printf '%s' "$latest" | grep -qE '^[0-9]+\.[0-9]+\.[0-9]+$'; then
+            echo "::error::Could not parse a version from upstream filename '$fname'"
+            exit 1
+          fi
+
+          {
+            echo "latest=$latest"
+            echo "current=$current"
+            if [ "$latest" != "$current" ]; then
+              echo "changed=true"
+            else
+              echo "changed=false"
+            fi
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Summary
+        run: |
+          echo "Upstream: ${{ steps.detect.outputs.latest }}" >> "$GITHUB_STEP_SUMMARY"
+          echo "Packaged: ${{ steps.detect.outputs.current }}" >> "$GITHUB_STEP_SUMMARY"
+          echo "Update needed: ${{ steps.detect.outputs.changed }}" >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Bump PKGBUILD
+        if: steps.detect.outputs.changed == 'true'
+        run: |
+          set -euo pipefail
+          sed -i -E "s/^pkgver=.*/pkgver=${{ steps.detect.outputs.latest }}/" PKGBUILD
+          sed -i -E "s/^pkgrel=.*/pkgrel=1/" PKGBUILD
+
+      - name: Regenerate .SRCINFO
+        if: steps.detect.outputs.changed == 'true'
+        run: |
+          set -euo pipefail
+          # makepkg refuses to run as root and only ships on Arch, so do this
+          # inside an Arch container as an unprivileged user. The container only
+          # reads the workspace; its stdout is captured into .SRCINFO on the host
+          # so file ownership stays clean.
+          docker run --rm -v "$PWD":/pkg:ro archlinux:base-devel bash -c '
+            set -euo pipefail
+            pacman -Sy --needed --noconfirm curl >/dev/null 2>&1
+            useradd -m builder
+            cp -r /pkg /tmp/build
+            chown -R builder:builder /tmp/build
+            su builder -c "cd /tmp/build && makepkg --printsrcinfo"
+          ' > .SRCINFO
+          echo "--- generated .SRCINFO ---"
+          cat .SRCINFO
+
+      - name: Commit version bump to this repo
+        if: steps.detect.outputs.changed == 'true'
+        run: |
+          set -euo pipefail
+          git config user.name "$COMMIT_NAME"
+          git config user.email "$COMMIT_EMAIL"
+          git add PKGBUILD .SRCINFO
+          if git diff --cached --quiet; then
+            echo "Nothing to commit."
+          else
+            git commit -m "new version available (${{ steps.detect.outputs.latest }})"
+            git push
+          fi
+
+      - name: Publish to AUR
+        if: steps.detect.outputs.changed == 'true'
+        env:
+          AUR_SSH_PRIVATE_KEY: ${{ secrets.AUR_SSH_PRIVATE_KEY }}
+        run: |
+          set -euo pipefail
+          if [ -z "${AUR_SSH_PRIVATE_KEY:-}" ]; then
+            echo "::error::AUR_SSH_PRIVATE_KEY secret is not set."
+            exit 1
+          fi
+
+          install -dm700 ~/.ssh
+          printf '%s\n' "$AUR_SSH_PRIVATE_KEY" > ~/.ssh/aur
+          chmod 600 ~/.ssh/aur
+          ssh-keyscan -t rsa,ed25519 aur.archlinux.org >> ~/.ssh/known_hosts 2>/dev/null
+          export GIT_SSH_COMMAND="ssh -i $HOME/.ssh/aur -o IdentitiesOnly=yes -o UserKnownHostsFile=$HOME/.ssh/known_hosts"
+
+          # Clone the AUR repo fresh and copy the updated files in. This keeps the
+          # AUR history independent of this GitHub repo's history, so the two can
+          # never diverge into a non-fast-forward conflict.
+          git clone "ssh://aur@aur.archlinux.org/${PKGNAME}.git" aur-repo
+          cp PKGBUILD .SRCINFO aur-repo/
+
+          cd aur-repo
+          git config user.name "$COMMIT_NAME"
+          git config user.email "$COMMIT_EMAIL"
+          if git diff --quiet; then
+            echo "AUR already up to date."
+            exit 0
+          fi
+          git add PKGBUILD .SRCINFO
+          git commit -m "new version available (${{ steps.detect.outputs.latest }})"
+          git push origin master
