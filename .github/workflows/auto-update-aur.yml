@@ -10,9 +10,13 @@ name: Auto-update AUR package
 
 on:
   schedule:
-    # Every 6 hours. Adjust to taste.
+    # Every 6 hours. Fallback in case the instant trigger below is missed.
     - cron: "0 */6 * * *"
   workflow_dispatch: # allow manual runs from the Actions tab
+  repository_dispatch:
+    # Instant trigger fired by the cloudflare-web-change-notifier worker the
+    # moment it detects a new upstream release; the schedule above is a backstop.
+    types: [new-version]
 
 # Allow the bump commit to be pushed back to this GitHub repo.
 permissions:
