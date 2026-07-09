@@ -38,6 +38,12 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v6
+        with:
+          # Check out the current tip of master rather than the trigger-time
+          # SHA, so a run queued behind a concurrent one (cron vs. dispatch)
+          # re-evaluates against the latest state and short-circuits with
+          # changed=false instead of redoing the bump on a stale checkout.
+          ref: master
 
       - name: Detect latest Beeper version
         id: detect
