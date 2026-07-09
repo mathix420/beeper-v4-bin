@@ -110,13 +110,33 @@ jobs:
           set -euo pipefail
           git config user.name "$COMMIT_NAME"
           git config user.email "$COMMIT_EMAIL"
+          target='${{ steps.detect.outputs.latest }}'
           git add PKGBUILD .SRCINFO
           if git diff --cached --quiet; then
             echo "Nothing to commit."
-          else
-            git commit -m "new version available (${{ steps.detect.outputs.latest }})"
-            git push
+            exit 0
           fi
+          git commit -m "new version available (${target})"
+          # The 6h cron and the worker's repository_dispatch can both bump the
+          # same version at once, leaving this checkout behind whoever pushed
+          # first. Retry: if the remote already reached this version the race is
+          # already won (no-op); otherwise rebase onto it and try again.
+          for attempt in 1 2 3; do
+            if git push origin master; then
+              echo "pushed on attempt $attempt"
+              exit 0
+            fi
+            echo "push rejected (attempt $attempt); syncing with remote master"
+            git fetch origin master
+            remote_ver=$(git show origin/master:PKGBUILD | sed -nE 's/^pkgver=(.+)/\1/p')
+            if [ "$remote_ver" = "$target" ]; then
+              echo "remote master already at $target; a concurrent run won the race."
+              exit 0
+            fi
+            git rebase origin/master
+          done
+          echo "::error::could not push version bump after 3 attempts"
+          exit 1
 
       - name: Publish to AUR
         if: steps.detect.outputs.changed == 'true'
